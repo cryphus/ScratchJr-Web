@@ -13,6 +13,60 @@
 
   <head>
     <title>ScratchJr</title>
+    <meta name="theme-color" content="#6b4caf" />
+    <meta
+      name="description"
+      content="ScratchJr in your browser — create interactive stories and games."
+    />
+    <link rel="manifest" href="app.webmanifest" />
+    <style>
+      .web-project-tools {
+        position: fixed;
+        z-index: 100000;
+        top: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 6px;
+        padding: 5px;
+        border-radius: 12px;
+        background: rgba(31, 24, 50, 0.88);
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25);
+        opacity: 0.2;
+        transition: opacity 160ms ease;
+      }
+      .web-project-tools:hover,
+      .web-project-tools:focus-within {
+        opacity: 1;
+      }
+      .web-project-tools button {
+        min-width: 38px;
+        min-height: 32px;
+        padding: 4px 9px;
+        border: 0;
+        border-radius: 8px;
+        background: #fff;
+        color: #33264f;
+        font: 600 13px/1 system-ui, sans-serif;
+        cursor: pointer;
+      }
+      .web-project-tools button:hover { background: #f0e9ff; }
+      .web-project-status {
+        position: fixed;
+        z-index: 100001;
+        right: 12px;
+        bottom: 10px;
+        padding: 6px 10px;
+        border-radius: 10px;
+        background: rgba(31, 24, 50, 0.82);
+        color: white;
+        font: 12px/1.2 system-ui, sans-serif;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 180ms ease;
+      }
+      .web-project-status.visible { opacity: 1; }
+    </style>
 
     <script>
       window.scratchJrPage = "editor";
@@ -36,6 +90,17 @@
         }
       }
 
+      // Standalone browser mode: restore the last autosaved project.
+      if (!window.savedContent) {
+        try {
+          window.savedContent = window.localStorage.getItem(
+            "scratchjr.web.project.v1"
+          );
+        } catch (e) {
+          // Storage can be disabled by the browser; the editor still works.
+        }
+      }
+
       // Support postMessage for loading data after init
       window.addEventListener("message", function (e) {
         if (e.data && e.data.type === "LOAD_DATA") {
@@ -54,8 +119,113 @@
     </script>
   </head>
   <body style="background: white; overflow: auto">
+    <nav class="web-project-tools" aria-label="Project file controls">
+      <button type="button" id="web-new" title="New project">New</button>
+      <button type="button" id="web-open" title="Open a ScratchJr web project">Open</button>
+      <button type="button" id="web-save" title="Download a project backup">Save</button>
+      <input id="web-file" type="file" accept="application/json,.json,.sjrweb" hidden />
+    </nav>
+    <div id="web-status" class="web-project-status" role="status" aria-live="polite"></div>
     <div class="frame" id="frame"></div>
     <div class="libframe" id="libframe"></div>
     <div class="paintframe" id="paintframe"></div>
+    <script>
+      (function () {
+        var storageKey = "scratchjr.web.project.v1";
+        var statusTimer;
+        var status = document.getElementById("web-status");
+        var fileInput = document.getElementById("web-file");
+
+        function showStatus(message) {
+          status.textContent = message;
+          status.classList.add("visible");
+          window.clearTimeout(statusTimer);
+          statusTimer = window.setTimeout(function () {
+            status.classList.remove("visible");
+          }, 1800);
+        }
+
+        function readProjectFile(text) {
+          var parsed = JSON.parse(text);
+          if (parsed && parsed.format === "scratchjr-web-v1") {
+            if (!Array.isArray(parsed.project) || !parsed.project[0] || !parsed.project[0].json) throw new Error("Invalid project");
+            Object.keys(parsed.assets || {}).forEach(function (name) {
+              window.localStorage.setItem("scratchjr.web.asset." + name, parsed.assets[name]);
+            });
+            window.localStorage.setItem("scratchjr.web.assets.v1", JSON.stringify(Object.keys(parsed.assets || {})));
+            return JSON.stringify(parsed.project);
+          }
+          if (!Array.isArray(parsed) || !parsed[0] || !parsed[0].json) throw new Error("Invalid project");
+          return text;
+        }
+
+        window.addEventListener("scratchjr:project-saved", function () {
+          showStatus("Saved in this browser");
+        });
+
+        document.getElementById("web-new").addEventListener("click", function () {
+          if (!window.confirm("Start a new project? The current project will remain in your downloaded backups only.")) return;
+          window.localStorage.removeItem(storageKey);
+          window.location.replace(window.location.pathname);
+        });
+
+        document.getElementById("web-open").addEventListener("click", function () {
+          fileInput.click();
+        });
+
+        fileInput.addEventListener("change", function () {
+          var file = fileInput.files && fileInput.files[0];
+          if (!file) return;
+          var reader = new FileReader();
+          reader.onload = function () {
+            try {
+              window.localStorage.setItem(storageKey, readProjectFile(reader.result));
+              window.location.replace(window.location.pathname);
+            } catch (e) {
+              window.alert("This file is not a valid ScratchJr web project.");
+            }
+          };
+          reader.readAsText(file);
+        });
+
+        document.getElementById("web-save").addEventListener("click", function () {
+          if (window.__requestSave) window.__requestSave();
+          var data = window.localStorage.getItem(storageKey);
+          if (!data) {
+            showStatus("The project is not ready yet");
+            return;
+          }
+          var parsed = JSON.parse(data);
+          var name = (parsed[0].name || "ScratchJr-project")
+            .replace(/[^a-z0-9_-]+/gi, "-")
+            .replace(/^-|-$/g, "");
+          var assets = {};
+          try {
+            JSON.parse(window.localStorage.getItem("scratchjr.web.assets.v1") || "[]").forEach(function (assetName) {
+              var value = window.localStorage.getItem("scratchjr.web.asset." + assetName);
+              if (value !== null) assets[assetName] = value;
+            });
+          } catch (e) {}
+          var backup = JSON.stringify({
+            format: "scratchjr-web-v1",
+            project: parsed,
+            assets: assets,
+          });
+          var blob = new Blob([backup], { type: "application/json" });
+          var link = document.createElement("a");
+          link.href = URL.createObjectURL(blob);
+          link.download = (name || "ScratchJr-project") + ".sjrweb";
+          link.click();
+          window.setTimeout(function () { URL.revokeObjectURL(link.href); }, 1000);
+          showStatus("Backup downloaded");
+        });
+
+        if ("serviceWorker" in navigator && window.location.protocol === "https:") {
+          window.addEventListener("load", function () {
+            navigator.serviceWorker.register("./sw.js");
+          });
+        }
+      })();
+    </script>
   </body>
 </html>

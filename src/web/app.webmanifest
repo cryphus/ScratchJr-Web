@@ -1,0 +1,10 @@
+{
+  "name": "ScratchJr Web",
+  "short_name": "ScratchJr",
+  "description": "Create interactive stories and games with ScratchJr in your browser.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6b4caf"
+}

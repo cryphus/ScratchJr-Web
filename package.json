@@ -6,7 +6,8 @@
     "main": "src/main.js",
     "scripts": {
         "start": "webpack-dev-server",
-        "build": "webpack",
+        "build": "webpack --mode production",
+        "build:dev": "webpack --mode development",
         "debugMain": "electron-forge start -i",
         "package": "electron-forge package",
         "lint": "eslint src --color"

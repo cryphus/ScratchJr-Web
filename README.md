@@ -1,6 +1,35 @@
 ## Official disclaimer
 Scratch and ScratchJr are trademarks of Massachusetts Institute of Technology, which does not sponsor, endorse, or authorize this content. See scratchjr.org for more information.
 
+## Web edition and GitHub Pages
+
+This branch packages the ScratchJr editor as a completely static website. It can
+be hosted on GitHub Pages without a server or database.
+
+- Projects are autosaved in the current browser.
+- **New**, **Open**, and **Save** controls create a fresh project, import a
+  `.sjrweb` backup, or download the current project.
+- HTTPS enables the included service worker, so previously loaded assets remain
+  available offline.
+- A GitHub Actions workflow builds and deploys `dist/` automatically.
+
+Run locally:
+
+```sh
+npm ci
+npm start
+```
+
+Create a production build:
+
+```sh
+npm run build
+```
+
+To publish a fork, open **Settings → Pages** in GitHub and choose **GitHub
+Actions** as the source. Push to the default branch; the workflow in
+`.github/workflows/pages.yml` publishes the site.
+
 ## Downloads 
 [Download ScratchJr for Desktop](https://jfo8000.github.io/ScratchJr-Desktop/)
 

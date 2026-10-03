@@ -203,7 +203,9 @@ export default class ScratchJr {
       "sec",
       BlockSpecs.loadCount
     );
-    currentProject = urlvars.pmd5;
+    // The desktop build receives a database id in pmd5. A standalone web
+    // session has no native database, so it uses one stable local id.
+    currentProject = urlvars.pmd5 || "browser-project";
     editmode = urlvars.mode;
     libInit();
     Project.init();

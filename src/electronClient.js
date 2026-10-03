@@ -82,6 +82,33 @@ ipcRenderer.on("databaseRestored", function () {
 class ElectronDesktopInterface {
   constructor() {
     this.currentAudio = {};
+    this.mediaReads = {};
+  }
+
+  assetKey(name) {
+    return "scratchjr.web.asset." + name;
+  }
+
+  rememberAsset(name, value) {
+    window.localStorage.setItem(this.assetKey(name), value);
+    let names = [];
+    try {
+      names = JSON.parse(window.localStorage.getItem("scratchjr.web.assets.v1") || "[]");
+    } catch (e) {}
+    if (names.indexOf(name) < 0) {
+      names.push(name);
+      window.localStorage.setItem("scratchjr.web.assets.v1", JSON.stringify(names));
+    }
+    return name;
+  }
+
+  contentName(value, ext) {
+    let hash = 2166136261;
+    for (let i = 0; i < value.length; i++) {
+      hash ^= value.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    return (hash >>> 0).toString(16) + "." + ext;
   }
 
   database_stmt(json) {
@@ -103,32 +130,35 @@ class ElectronDesktopInterface {
 
   io_getmedia(file) {
     if (DEBUG_FILEIO) debugLog("io_getmedia", file);
-    return ipcRenderer.sendSync("io_getmedia", file);
+    return window.localStorage.getItem(this.assetKey(file));
   }
 
   io_getmediadata(key, offset, length) {
     if (DEBUG_FILEIO) debugLog("io_getmediadata", key, offset, length);
-    return ipcRenderer.sendSync("io_getmediadata", key, offset, length);
+    return (this.mediaReads[key] || "").substring(offset, offset + length);
   }
 
   io_getmediadone(key) {
     if (DEBUG_FILEIO) debugLog("io_getmediadone", key);
-    return ipcRenderer.sendSync("io_getmediadone", key);
+    delete this.mediaReads[key];
+    return true;
   }
   io_getmedialen(file, key) {
     if (DEBUG_FILEIO) debugLog("io_getmedialen", file, key);
-    return ipcRenderer.sendSync("io_getmedialen", file, key);
+    this.mediaReads[key] = window.localStorage.getItem(this.assetKey(file)) || "";
+    return this.mediaReads[key].length;
   }
 
   io_setmedia(str, ext) {
     if (DEBUG_FILEIO) debugLog("io_setmedia", str, ext);
-    return ipcRenderer.sendSync("io_setmedia", str, ext);
+    const name = this.contentName(str, ext);
+    return this.rememberAsset(name, str);
   }
 
   io_setmedianame(str, name, ext) {
     if (DEBUG_FILEIO) debugLog("io_setmedianame", name, ext);
 
-    return ipcRenderer.sendSync("io_setmedianame", str, name, ext);
+    return this.rememberAsset(name + "." + ext, str);
   }
 
   io_getmd5(str) {
@@ -138,7 +168,8 @@ class ElectronDesktopInterface {
 
   io_remove(str) {
     if (DEBUG_NYI) debugLog("io_remove - NYI", str);
-    return ipcRenderer.sendSync("io_remove", str);
+    window.localStorage.removeItem(this.assetKey(str));
+    return true;
   }
 
   io_cleanassets(str) {
@@ -150,8 +181,12 @@ class ElectronDesktopInterface {
 
   io_registersound(dir, name) {
     if (!this.currentAudio[name]) {
-      // let dataUri = ipcRenderer.sendSync("io_getAudioData", name);
-      this.loadSoundFromDataURI(name, `sounds/${name}`);
+      let dataUri = window.localStorage.getItem(this.assetKey(name));
+      if (dataUri && dataUri.indexOf("data:") !== 0) {
+        const extension = name.split(".").pop().toLowerCase();
+        dataUri = `data:audio/${extension};base64,${dataUri}`;
+      }
+      this.loadSoundFromDataURI(name, dataUri || `sounds/${name}`);
     }
   }
 

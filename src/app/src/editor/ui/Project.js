@@ -519,6 +519,18 @@ export default class Project {
       data: projectMetaData,
     }, "*");
 
+    // GitHub Pages/standalone mode has no native database. Keep the complete
+    // project metadata in browser storage so a refresh can resume instantly.
+    try {
+      window.localStorage.setItem("scratchjr.web.project.v1", projectMetaData);
+      window.savedContent = projectMetaData;
+      window.dispatchEvent(new CustomEvent("scratchjr:project-saved", {
+        detail: projectMetaData,
+      }));
+    } catch (e) {
+      console.warn("ScratchJr could not save to browser storage", e);
+    }
+
     // Generate and send thumbnail to parent
     Project.getThumbnailPNG(ScratchJr.stage.pages[0], 192, 144, function (dataurl) {
       parent.postMessage({
