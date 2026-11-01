@@ -20,45 +20,62 @@
     />
     <link rel="manifest" href="app.webmanifest" />
     <style>
-      .web-project-tools {
-        position: fixed;
-        z-index: 100000;
-        right: max(12px, env(safe-area-inset-right));
-        bottom: max(12px, env(safe-area-inset-bottom));
+      body.web-app {
+        background: white;
+        overflow: auto;
+      }
+      .web-project-bar {
+        box-sizing: border-box;
         display: flex;
-        gap: 6px;
-        padding: 5px;
-        border-radius: 12px;
-        background: rgba(31, 24, 50, 0.88);
-        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25);
+        align-items: center;
+        gap: 16px;
+        height: 49px;
+        padding: 4px 16px;
+        border-bottom: 1px solid #c0c2c3;
+        background: #e9ecf0;
+      }
+      .web-project-tools {
+        display: flex;
+        flex-shrink: 0;
+        gap: 8px;
       }
       .web-project-tools button {
-        min-width: 38px;
-        min-height: 32px;
-        padding: 4px 9px;
-        border: 0;
+        min-width: 64px;
+        min-height: 36px;
+        padding: 6px 12px;
+        border: 1px solid #b9c0c6;
         border-radius: 8px;
         background: #fff;
-        color: #33264f;
+        color: #355e7c;
         font: 600 13px/1 system-ui, sans-serif;
         cursor: pointer;
       }
-      .web-project-tools button:hover { background: #f0e9ff; }
+      .web-project-tools button:hover { background: #e0f2fa; }
+      .web-project-tools button:focus-visible {
+        outline: 2px solid #355e7c;
+        outline-offset: 2px;
+      }
+      .web-project-tools button:active { background: #cde7f3; }
       .web-project-status {
-        position: fixed;
-        z-index: 100001;
-        right: max(12px, env(safe-area-inset-right));
-        bottom: calc(max(12px, env(safe-area-inset-bottom)) + 50px);
-        padding: 6px 10px;
-        border-radius: 10px;
-        background: rgba(31, 24, 50, 0.82);
-        color: white;
+        margin-left: auto;
+        color: #4c4d4f;
         font: 12px/1.2 system-ui, sans-serif;
         opacity: 0;
-        pointer-events: none;
         transition: opacity 180ms ease;
       }
       .web-project-status.visible { opacity: 1; }
+      #web-editor {
+        position: relative;
+        height: calc(100% - 49px);
+        min-width: 1020px;
+        min-height: 745px;
+        contain: layout;
+      }
+      #web-editor > .libframe,
+      #web-editor > .paintframe {
+        top: 0;
+        left: 0;
+      }
     </style>
 
     <script>
@@ -111,17 +128,21 @@
       });
     </script>
   </head>
-  <body style="background: white; overflow: auto">
-    <nav class="web-project-tools" aria-label="Project file controls">
-      <button type="button" id="web-new" title="New project">New</button>
-      <button type="button" id="web-open" title="Open a ScratchJr web project">Open</button>
-      <button type="button" id="web-save" title="Download a project backup">Save</button>
-      <input id="web-file" type="file" accept="application/json,.json,.sjrweb" hidden />
-    </nav>
-    <div id="web-status" class="web-project-status" role="status" aria-live="polite"></div>
-    <div class="frame" id="frame"></div>
-    <div class="libframe" id="libframe"></div>
-    <div class="paintframe" id="paintframe"></div>
+  <body class="web-app">
+    <header class="web-project-bar">
+      <nav class="web-project-tools" aria-label="Project file controls">
+        <button type="button" id="web-new" title="New project">New</button>
+        <button type="button" id="web-open" title="Open a ScratchJr web project">Open</button>
+        <button type="button" id="web-save" title="Download a project backup">Save</button>
+        <input id="web-file" type="file" accept="application/json,.json,.sjrweb" hidden />
+      </nav>
+      <div id="web-status" class="web-project-status" role="status" aria-live="polite"></div>
+    </header>
+    <main id="web-editor" aria-label="ScratchJr editor">
+      <div class="frame" id="frame"></div>
+      <div class="libframe" id="libframe"></div>
+      <div class="paintframe" id="paintframe"></div>
+    </main>
     <script>
       (function () {
         var storageKey = "scratchjr.web.project.v1";

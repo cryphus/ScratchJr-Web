@@ -479,6 +479,8 @@ export function getFit(dw, dh) {
 }
 
 export function getDocumentHeight() {
+  var editor = document.getElementById("web-editor");
+  if (editor) return editor.clientHeight;
   return Math.max(
     document.body.clientHeight,
     document.documentElement.clientHeight
@@ -486,6 +488,8 @@ export function getDocumentHeight() {
 }
 
 export function getDocumentWidth() {
+  var editor = document.getElementById("web-editor");
+  if (editor) return editor.clientWidth;
   return Math.max(
     document.body.clientWidth,
     document.documentElement.clientWidth
@@ -692,11 +696,15 @@ export function colorToRGBA(color, opacity) {
  * turning them into pixel values.
  */
 export function css_vh(y) {
-  return (y * window.innerHeight) / 100.0 + "px";
+  var editor = document.getElementById("web-editor");
+  var height = editor ? editor.clientHeight : window.innerHeight;
+  return (y * height) / 100.0 + "px";
 }
 
 export function css_vw(x) {
-  return (x * window.innerWidth) / 100.0 + "px";
+  var editor = document.getElementById("web-editor");
+  var width = editor ? editor.clientWidth : window.innerWidth;
+  return (x * width) / 100.0 + "px";
 }
 
 Number.prototype.mod = function (n) {
