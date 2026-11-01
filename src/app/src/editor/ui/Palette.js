@@ -342,21 +342,14 @@ export default class Palette {
         return;
       }
     }
-    var mx =
-      Events.dragmousex -
-      frame.offsetLeft -
-      localx(Events.dragthumbnail, Events.dragmousex);
-    var my =
-      Events.dragmousey -
-      frame.offsetTop -
-      localy(Events.dragthumbnail, Events.dragmousey);
     Events.dragcanvas = Events.dragthumbnail.owner.duplicateBlock(
-      mx,
-      my,
+      0,
+      0,
       sc.spr
     ).div;
     Events.dragcanvas.style.zIndex = ScratchJr.dragginLayer;
     Events.dragDiv.appendChild(Events.dragcanvas);
+    Events.centerDraggedBlock(e);
     // Events.dragcanvas.owner.lift();
     sc.dragList = [Events.dragcanvas.owner];
     sc.prepareCaret(Events.dragcanvas.owner);
@@ -603,8 +596,8 @@ export default class Palette {
       pt = null;
     }
     var box = new Rectangle(
-      el.left / scale,
-      el.top / scale,
+      globalx(el) / scale,
+      globaly(el) / scale,
       el.offsetWidth / scale,
       el.offsetHeight / scale
     );
@@ -624,7 +617,7 @@ export default class Palette {
     }
     if (
       box2.overlapElemBy(box, 0.66) &&
-      box2.hitRect({ x: el.left / scale, y: el.top / scale })
+      box2.hitRect({ x: box.x, y: box.y })
     ) {
       return "palette";
     }
@@ -680,8 +673,8 @@ export default class Palette {
   static getHittedThumb(el, div, scale) {
     scale = typeof scale !== "undefined" ? scale : 1;
     var box1 = new Rectangle(
-      el.left / scale,
-      el.top / scale,
+      globalx(el) / scale,
+      globaly(el) / scale,
       el.offsetWidth / scale,
       el.offsetHeight / scale
     );
@@ -726,12 +719,13 @@ export default class Palette {
 
   static dropBlockFromPalette(e, element) {
     e.preventDefault();
+    Events.centerDraggedBlock(e);
     switch (Palette.getLandingPlace(element, e)) {
       case "scripts":
         iOS.analyticsEvent("editor", "new_block", element.owner.blocktype);
         var sc = ScratchJr.getActiveScript();
-        var dx = localx(sc, element.left);
-        var dy = localy(sc, element.top);
+        var dx = localx(sc, globalx(element));
+        var dy = localy(sc, globaly(element));
         ScriptsPane.blockDropped(sc, dx, dy);
         var spr = ScratchJr.getActiveScript().owner.spr;
         Undo.record({

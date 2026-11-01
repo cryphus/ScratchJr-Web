@@ -56,6 +56,11 @@
         outline-offset: 2px;
       }
       .web-project-tools button:active { background: #cde7f3; }
+      .web-project-tools button[aria-pressed="true"] {
+        background: #355e7c;
+        border-color: #355e7c;
+        color: white;
+      }
       .web-project-status {
         margin-left: auto;
         color: #4c4d4f;
@@ -134,6 +139,7 @@
         <button type="button" id="web-new" title="New project">New</button>
         <button type="button" id="web-open" title="Open a ScratchJr web project">Open</button>
         <button type="button" id="web-save" title="Download a project backup">Save</button>
+        <button type="button" id="web-mute" aria-label="Mute sounds" aria-pressed="false" title="Turn sounds off">Sound: On</button>
         <input id="web-file" type="file" accept="application/json,.json,.sjrweb" hidden />
       </nav>
       <div id="web-status" class="web-project-status" role="status" aria-live="polite"></div>
@@ -149,6 +155,30 @@
         var statusTimer;
         var status = document.getElementById("web-status");
         var fileInput = document.getElementById("web-file");
+        var muteButton = document.getElementById("web-mute");
+        var muteKey = "scratchjr.web.muted.v1";
+        window.__scratchJrMuted = false;
+        try {
+          window.__scratchJrMuted = window.localStorage.getItem(muteKey) === "true";
+        } catch (e) {}
+
+        function updateMuteButton() {
+          muteButton.textContent = window.__scratchJrMuted ? "Sound: Off" : "Sound: On";
+          muteButton.title = window.__scratchJrMuted ? "Turn sounds on" : "Turn sounds off";
+          muteButton.setAttribute("aria-pressed", String(window.__scratchJrMuted));
+        }
+
+        updateMuteButton();
+        muteButton.addEventListener("click", function () {
+          window.__scratchJrMuted = !window.__scratchJrMuted;
+          if (window.tablet && window.tablet.setMuted) {
+            window.tablet.setMuted(window.__scratchJrMuted);
+          }
+          try {
+            window.localStorage.setItem(muteKey, String(window.__scratchJrMuted));
+          } catch (e) {}
+          updateMuteButton();
+        });
 
         function showStatus(message) {
           status.textContent = message;

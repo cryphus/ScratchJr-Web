@@ -8,6 +8,7 @@
         "start": "webpack-dev-server",
         "build": "webpack --mode production",
         "build:dev": "webpack --mode development",
+        "test": "node --test tests/*.test.cjs",
         "debugMain": "electron-forge start -i",
         "package": "electron-forge package",
         "lint": "eslint src --color"

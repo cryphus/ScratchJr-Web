@@ -1,4 +1,4 @@
-const CACHE_NAME = "scratchjr-web-v2";
+const CACHE_NAME = "scratchjr-web-v3";
 const APP_SHELL = ["./", "./index.html", "./bundle.js", "./settings.json", "./media.json"];
 
 self.addEventListener("install", (event) => {

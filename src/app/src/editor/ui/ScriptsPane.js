@@ -75,19 +75,9 @@ export default class ScriptsPane {
         var sc = ScratchJr.getActiveScript().owner;
         sc.dragList = sc.findGroup(Events.dragthumbnail.owner);
         sc.flowCaret = null;
-        var sy = Events.dragthumbnail.parentNode.scrollTop;
-        var sx = Events.dragthumbnail.parentNode.scrollLeft;
         Events.dragmousex = x;
         Events.dragmousey = y;
-        var lpt = {
-            x: localx(Events.dragthumbnail.parentNode, x),
-            y: localy(Events.dragthumbnail.parentNode, y)
-        };
-        var mx = Events.dragmousex - globalx(Events.dragDiv) - lpt.x + Events.dragthumbnail.left;
-        var my = Events.dragmousey - globaly(Events.dragDiv) - lpt.y + Events.dragthumbnail.top;
         var mtx = new WebKitCSSMatrix(window.getComputedStyle(Events.dragthumbnail).webkitTransform);
-        my -= sy;
-        mx -= sx;
         Events.dragcanvas = Events.dragthumbnail;
         Events.dragcanvas.origin = 'scripts';
         Events.dragcanvas.startx = mtx.m41;
@@ -95,9 +85,9 @@ export default class ScriptsPane {
         if (!Events.dragcanvas.isReporter && Events.dragcanvas.parentNode) {
             Events.dragcanvas.parentNode.removeChild(Events.dragcanvas);
         }
-        Events.move3D(Events.dragcanvas, mx, my);
         Events.dragcanvas.style.zIndex = ScratchJr.dragginLayer;
         Events.dragDiv.appendChild(Events.dragcanvas);
+        Events.centerDraggedBlock(e);
         var b = Events.dragcanvas.owner;
         b.detachBlock();
         //	b.lift();
@@ -122,16 +112,13 @@ export default class ScriptsPane {
 
     static draggingBlock (e) {
         e.preventDefault();
-        var pt = Events.getTargetPoint(e);
-        var dx = pt.x - Events.dragmousex;
-        var dy = pt.y - Events.dragmousey;
-        Events.move3D(Events.dragcanvas, dx, dy);
-        ScriptsPane.blockFeedback(Events.dragcanvas.left, Events.dragcanvas.top, e);
+        Events.centerDraggedBlock(e);
+        ScriptsPane.blockFeedback(globalx(Events.dragcanvas), globaly(Events.dragcanvas), e);
     }
 
     static blockFeedback (dx, dy, e) {
         var script = ScratchJr.getActiveScript().owner;
-        var limit = gn('palette').parentNode.offsetTop + gn('palette').parentNode.offsetHeight;
+        var limit = globaly(gn('palette').parentNode) + gn('palette').parentNode.offsetHeight;
         var ycor = dy + Events.dragcanvas.offsetHeight;
         if (ycor < limit) {
             script.removeCaret();
@@ -171,13 +158,14 @@ export default class ScriptsPane {
 
     static dropBlock (e, el) {
         e.preventDefault();
+        Events.centerDraggedBlock(e);
         var sc = ScratchJr.getActiveScript();
         var spr = sc.owner.spr.id;
         var page = ScratchJr.stage.currentPage;
         switch (Palette.getLandingPlace(el, e)) {
         case 'scripts':
-            var dx = localx(sc, el.left);
-            var dy = localy(sc, el.top);
+            var dx = localx(sc, globalx(el));
+            var dy = localy(sc, globaly(el));
             ScriptsPane.blockDropped(sc, dx, dy);
             break;
         case 'library':

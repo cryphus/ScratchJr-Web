@@ -98,6 +98,8 @@ export default class Events {
         dragDiv = document.createElement('div');
         dragDiv.id = 'dragDiv';
         dragDiv.style.position = 'absolute';
+        dragDiv.style.left = '0px';
+        dragDiv.style.top = '0px';
         dragDiv.style.width = '0px'; // size doesn't matter since children float
         dragDiv.style.height = '0px';
         dragDiv.style.zIndex = 7001; // slightly higher than ScratchJr.dragginLayer
@@ -252,6 +254,15 @@ export default class Events {
         el.top = dy + mtx.m42;
         el.left = dx + mtx.m41;
         el.style.webkitTransform = 'translate3d(' + el.left + 'px,' + el.top + 'px, 0)';
+    }
+
+    static centerDraggedBlock (e) {
+        var pointer = e.touches && e.touches.length ? e.touches[0] :
+            (e.changedTouches && e.changedTouches.length ? e.changedTouches[0] : e);
+        var rect = dragcanvas.getBoundingClientRect();
+        Events.move3D(dragcanvas,
+            pointer.clientX - rect.left - rect.width / 2,
+            pointer.clientY - rect.top - rect.height / 2);
     }
 
 

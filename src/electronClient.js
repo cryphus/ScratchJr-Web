@@ -83,6 +83,17 @@ class ElectronDesktopInterface {
   constructor() {
     this.currentAudio = {};
     this.mediaReads = {};
+    this.muted = Boolean(window.__scratchJrMuted);
+  }
+
+  setMuted(muted) {
+    this.muted = Boolean(muted);
+    Object.keys(this.currentAudio).forEach((name) => {
+      this.currentAudio[name].muted = this.muted;
+    });
+    if (this.audioCaptureElement && this.audioCaptureElement.audioPlaybackElement) {
+      this.audioCaptureElement.audioPlaybackElement.muted = this.muted;
+    }
   }
 
   assetKey(name) {
@@ -194,6 +205,7 @@ class ElectronDesktopInterface {
     if (dataUri && name) {
       let audio = new window.Audio(dataUri);
       audio.volume = 0.8; // don't oversaturate the speakers
+      audio.muted = this.muted;
       audio.onended = function () {
         // we need to tell ScratchJR the sound is done
         // so that it will progress to the next block.
@@ -577,6 +589,7 @@ class AudioCapture {
   }
   /** calls play on an HTML audio element, takes care of promise */
   tryPlayAudio(audioElement) {
+    audioElement.muted = window.tablet.muted;
     try {
       let playPromise = audioElement.play();
       if (playPromise !== undefined) {
