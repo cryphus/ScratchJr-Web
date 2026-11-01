@@ -23,21 +23,14 @@
       .web-project-tools {
         position: fixed;
         z-index: 100000;
-        top: 8px;
-        left: 50%;
-        transform: translateX(-50%);
+        right: max(12px, env(safe-area-inset-right));
+        bottom: max(12px, env(safe-area-inset-bottom));
         display: flex;
         gap: 6px;
         padding: 5px;
         border-radius: 12px;
         background: rgba(31, 24, 50, 0.88);
         box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25);
-        opacity: 0.2;
-        transition: opacity 160ms ease;
-      }
-      .web-project-tools:hover,
-      .web-project-tools:focus-within {
-        opacity: 1;
       }
       .web-project-tools button {
         min-width: 38px;
@@ -54,8 +47,8 @@
       .web-project-status {
         position: fixed;
         z-index: 100001;
-        right: 12px;
-        bottom: 10px;
+        right: max(12px, env(safe-area-inset-right));
+        bottom: calc(max(12px, env(safe-area-inset-bottom)) + 50px);
         padding: 6px 10px;
         border-radius: 10px;
         background: rgba(31, 24, 50, 0.82);
